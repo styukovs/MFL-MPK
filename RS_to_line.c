@@ -3,6 +3,7 @@
 #include "RS_to_line.h"
 #include "CRC8.h"
 #include "init.h"
+#include "request_response_TDIM.h"
 
 static frame frame_to_line;
 static data data_to_line;
@@ -12,20 +13,32 @@ static void receive_data_RS232(void);
 static void answer_addr(void);
 static void send_data(void);
 static void send_byte(uint8_t byte);
-
 static void send_carrier(void);
+static bool request_UMV64(void);
 
 void __attribute__((__interrupt__)) _U1RXInterrupt(void)
 {
+    bool is_request_UMV64;
+    
     ClrWdt();
     HL2 = 1;
 
     receive_data_RS485();
-    send_data();
+    is_request_UMV64 = request_UMV64();
+    
+    if (!is_request_UMV64)
+    {
+        HL2 = 0;
+        HL1 = 1;
+        send_data();
+        TMR3 = 0x00; // Clear 32-bit Timer (msw)
+        TMR2 = 0x00; // Clear 32-bit Timer (lsw)
+        IFS0bits.T3IF = 0; //Clear Timer3 interrupt flag
+        T2CONbits.TON = 1; // Start 32-bit Timer
+    }
 
+    HL1 = 0;
     HL2 = 0;
-
-    RX_FX604;
 
     IFS0bits.U1RXIF = 0;
 }
@@ -56,6 +69,30 @@ static void receive_data_RS485(void)
     T1CONbits.TON = 0;
 }
 
+static bool request_UMV64(void)
+{
+    request_frame_UMV64 tmp;
+    uint8_t addr;
+    
+    addr = get_addr();
+    
+    tmp.null_byte = frame_to_line.data_buffer[0];
+    tmp.addr = frame_to_line.data_buffer[1];
+    tmp.setting_byte = frame_to_line.data_buffer[2];
+    
+    tmp.crc16 = frame_to_line.data_buffer[3];
+    tmp.crc16 = (tmp.crc16 << 8) | frame_to_line.data_buffer[4];
+    
+    if (tmp.null_byte == NULL_BYTE &&
+        tmp.addr == addr &&
+        tmp.setting_byte == SETTING_BYTE)
+    {
+        send_data_to_KVF(tmp);
+        return 1;
+    }
+    return 0;
+}
+
 void __attribute__((__interrupt__)) _U2RXInterrupt(void)
 {
     ClrWdt();
@@ -68,13 +105,22 @@ void __attribute__((__interrupt__)) _U2RXInterrupt(void)
     }
     else
     {
+        HL2 = 0;
+        HL1 = 1;
         send_data();
+        /*TMR3 = 0x00; // Clear 32-bit Timer (msw)
+        TMR2 = 0x00; // Clear 32-bit Timer (lsw)
+        IFS0bits.T3IF = 0; //Clear Timer3 interrupt flag
+        T2CONbits.TON = 1; // Start 32-bit Timer*/
     }
 
+    HL1 = 0;
     HL2 = 0;
 
-    RX_FX604;
-
+    TMR3 = 0x00; // Clear 32-bit Timer (msw)
+    TMR2 = 0x00; // Clear 32-bit Timer (lsw)
+    IFS0bits.T3IF = 0; //Clear Timer3 interrupt flag
+    T2CONbits.TON = 1; // Start 32-bit Timer
     IFS1bits.U2RXIF = 0;
 }
 
@@ -131,7 +177,7 @@ static void send_data(void)
 
     send_carrier();
 
-    head[NULL_BYTE] = 0x55;
+    head[NULL_BYTE] = COMMAND_SEND_TO_RS;
     head[DATA_SIZE_H] = data_to_line.len >> 8;
     head[DATA_SIZE_L] = data_to_line.len;
     crc = Crc8(head, SIZE_OF_HEAD);
@@ -147,6 +193,7 @@ static void send_data(void)
         send_byte(*data_to_line.ptr);
         data_to_line.ptr++;
     }
+    RX_FX604;
 }
 
 void __attribute__((__interrupt__)) _U1ErrInterrupt(void)

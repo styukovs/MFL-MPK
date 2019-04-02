@@ -1,5 +1,4 @@
 #include "main.h"
-#include "init.h"
 
 int main(void)
 {
@@ -7,7 +6,11 @@ int main(void)
 
     int_ON();
     RX_FX604;
-    while (1);
+    while (1)
+    {
+        __delay_ms(400);
+        request_TDIM();
+    }
 
     return (0);
 }

@@ -3,6 +3,7 @@
 #include "line_to_RS.h"
 #include "CRC8.h"
 #include "init.h"
+#include "request_response_TDIM.h"
 
 static frame frame_to_RS;
 static data data_to_RS;
@@ -16,7 +17,7 @@ void __attribute__((__interrupt__)) _CNInterrupt(void)
 
     if (0 == DET)
     {
-        int_ON();
+        IFS1bits.CNIF = 0;
         return;
     }
     
@@ -24,10 +25,26 @@ void __attribute__((__interrupt__)) _CNInterrupt(void)
     HL1 = 1;
     if (receive_frame())
     {
-        send_data();
+        if (frame_to_RS.null_byte == COMMAND_SEND_TO_RS)
+        {
+            HL1 = 0;
+            HL2 = 1;
+            send_data();
+            /*TMR3 = 0x00; // Clear 32-bit Timer (msw)
+            TMR2 = 0x00; // Clear 32-bit Timer (lsw)
+            IFS0bits.T3IF = 0; //Clear Timer3 interrupt flag
+            T2CONbits.TON = 1; // Start 32-bit Timer*/
+        }
+        else
+            response_TDIM(frame_to_RS.null_byte);
     }
     HL1 = 0;
+    HL2 = 0;
 
+    TMR3 = 0x00; // Clear 32-bit Timer (msw)
+    TMR2 = 0x00; // Clear 32-bit Timer (lsw)
+    IFS0bits.T3IF = 0; //Clear Timer3 interrupt flag
+    T2CONbits.TON = 1; // Start 32-bit Timer
     IFS1bits.CNIF = 0;
 }
 
@@ -37,12 +54,45 @@ static bool receive_frame(void)
 {
     uint8_t head[SIZE_OF_HEAD];
     
+    receive_byte();
+    response_TDIM(BLOCK_NUM_0);
+    return 0;
+    
+    
+    
+    
+    HL1 = 0;
+    HL2 = 1;
+    data_to_RS.ptr = frame_to_RS.data_buffer;
+    data_to_RS.len = 0;
+    data_to_RS.cnt = 0;
+    while (DET)
+    {
+        *(data_to_RS.ptr) = receive_byte();
+        (data_to_RS.ptr)++;
+        (data_to_RS.cnt)++;
+        (data_to_RS.len)++;
+    }
+    send_data();
+    return 0;
+    
+    
+    
+    
+    
     while (RDYN == 0)
     {
         receive_byte();
     }
     
     frame_to_RS.null_byte = receive_byte();
+    
+    if (frame_to_RS.null_byte == BLOCK_NUM_0 || frame_to_RS.null_byte == BLOCK_NUM_1 ||
+        frame_to_RS.null_byte == BLOCK_NUM_2 || frame_to_RS.null_byte == BLOCK_NUM_3)
+    {
+        return 1;
+    }
+    
     frame_to_RS.data_size = receive_byte();
     frame_to_RS.data_size = (frame_to_RS.data_size << 8) | receive_byte();
     frame_to_RS.CRC8 = receive_byte();
@@ -70,9 +120,8 @@ static bool receive_frame(void)
 
 static void send_data(void)
 {
-    // RS-485
-    U1MODEbits.STSEL = 1; // äâà ñòîïîâûõ áèòà
-    U2MODEbits.STSEL = 1; // äâà ñòîïîâûõ áèòà
+    U1MODEbits.STSEL = 1; // Ð´Ð²Ð° ÑÑ‚Ð¾Ð¿Ð¾Ð²Ñ‹Ñ… Ð±Ð¸Ñ‚Ð°
+    U2MODEbits.STSEL = 1; // Ð´Ð²Ð° ÑÑ‚Ð¾Ð¿Ð¾Ð²Ñ‹Ñ… Ð±Ð¸Ñ‚Ð°
     TX_RS485 = 1;
     data_to_RS.ptr = frame_to_RS.data_buffer;
     data_to_RS.cnt = data_to_RS.len;
@@ -86,8 +135,8 @@ static void send_data(void)
     }
     while (!U1STAbits.TRMT);
     TX_RS485 = 0;
-    U1MODEbits.STSEL = 0; // îäèí ñòîïîâûé áèò
-    U2MODEbits.STSEL = 0; // îäèí ñòîïîâûé áèò
+    U1MODEbits.STSEL = 0; // Ð¾Ð´Ð¸Ð½ ÑÑ‚Ð¾Ð¿Ð¾Ð²Ñ‹Ð¹ Ð±Ð¸Ñ‚
+    U2MODEbits.STSEL = 0; // Ð¾Ð´Ð¸Ð½ ÑÑ‚Ð¾Ð¿Ð¾Ð²Ñ‹Ð¹ Ð±Ð¸Ñ‚
 }
 
 
@@ -97,7 +146,7 @@ static uint8_t receive_byte(void)
     uint8_t byte = 0, i;
 
     SCLK = 0;
-    while(RDYN);                        ///// ÍÓÆÍÎ ×ÒÎÁÛ ÏÐÎÄÎËÆÅÍÈÅ ØËÎ ÎÒ ÇÀÄÍÅÃÎ ÔÐÎÍÒÀ (ÎÒ ÏÅÐÅÕÎÄÀ RDYN ÈÇ ÍÓËß Â ÅÄÈÍÈÖÓ)
+    while(RDYN);                        ///// ÐÐ£Ð–ÐÐž Ð§Ð¢ÐžÐ‘Ð« ÐŸÐ ÐžÐ”ÐžÐ›Ð–Ð•ÐÐ˜Ð• Ð¨Ð›Ðž ÐžÐ¢ Ð—ÐÐ”ÐÐ•Ð“Ðž Ð¤Ð ÐžÐÐ¢Ð (ÐžÐ¢ ÐŸÐ•Ð Ð•Ð¥ÐžÐ”Ð RDYN Ð˜Ð— ÐÐ£Ð›Ð¯ Ð’ Ð•Ð”Ð˜ÐÐ˜Ð¦Ð£)
     for (i = 0; i < 8; i++)
     {
         __delay_us(100);

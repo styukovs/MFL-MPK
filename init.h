@@ -2,13 +2,14 @@
 #define INIT_H
 
 #include "common.h"
+#include "request_response_TDIM.h"
 
 void init_modem(void);
 
-void int_ON(void); //инициализация прерываний
-void int_OFF(void); //отключение прерываний
+void int_ON(void); //РёРЅРёС†РёР°Р»РёР·Р°С†РёСЏ РїСЂРµСЂС‹РІР°РЅРёР№
+void int_OFF(void); //РѕС‚РєР»СЋС‡РµРЅРёРµ РїСЂРµСЂС‹РІР°РЅРёР№
 
-uint8_t get_addr(void); //взятие адреса
+uint8_t get_addr(void); //РІР·СЏС‚РёРµ Р°РґСЂРµСЃР°
 
 
 #endif //INIT_H
