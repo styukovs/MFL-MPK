@@ -24,9 +24,12 @@ void __attribute__((__interrupt__)) _CNInterrupt(void)
     HL1 = 1;
     if (receive_frame())
     {
+        HL1 = 0;
+        HL2 = 1;
         send_data();
     }
     HL1 = 0;
+    HL2 = 0;
 
     IFS1bits.CNIF = 0;
 }
@@ -71,8 +74,8 @@ static bool receive_frame(void)
 static void send_data(void)
 {
     // RS-485
-    U1MODEbits.STSEL = 1; // два стоповых бита
-    U2MODEbits.STSEL = 1; // два стоповых бита
+    U1MODEbits.STSEL = 1; // Г¤ГўГ  Г±ГІГ®ГЇГ®ГўГ»Гµ ГЎГЁГІГ 
+    U2MODEbits.STSEL = 1; // Г¤ГўГ  Г±ГІГ®ГЇГ®ГўГ»Гµ ГЎГЁГІГ 
     TX_RS485 = 1;
     data_to_RS.ptr = frame_to_RS.data_buffer;
     data_to_RS.cnt = data_to_RS.len;
@@ -86,8 +89,8 @@ static void send_data(void)
     }
     while (!U1STAbits.TRMT);
     TX_RS485 = 0;
-    U1MODEbits.STSEL = 0; // один стоповый бит
-    U2MODEbits.STSEL = 0; // один стоповый бит
+    U1MODEbits.STSEL = 0; // Г®Г¤ГЁГ­ Г±ГІГ®ГЇГ®ГўГ»Г© ГЎГЁГІ
+    U2MODEbits.STSEL = 0; // Г®Г¤ГЁГ­ Г±ГІГ®ГЇГ®ГўГ»Г© ГЎГЁГІ
 }
 
 
@@ -97,7 +100,7 @@ static uint8_t receive_byte(void)
     uint8_t byte = 0, i;
 
     SCLK = 0;
-    while(RDYN);                        ///// НУЖНО ЧТОБЫ ПРОДОЛЖЕНИЕ ШЛО ОТ ЗАДНЕГО ФРОНТА (ОТ ПЕРЕХОДА RDYN ИЗ НУЛЯ В ЕДИНИЦУ)
+    while(RDYN);                        ///// ГЌГ“Г†ГЌГЋ Г—Г’ГЋГЃГ› ГЏГђГЋГ„ГЋГ‹Г†Г…ГЌГ€Г… ГГ‹ГЋ ГЋГ’ Г‡ГЂГ„ГЌГ…ГѓГЋ Г”ГђГЋГЌГ’ГЂ (ГЋГ’ ГЏГ…ГђГ…Г•ГЋГ„ГЂ RDYN Г€Г‡ ГЌГ“Г‹Гџ Г‚ Г…Г„Г€ГЌГ€Г–Г“)
     for (i = 0; i < 8; i++)
     {
         __delay_us(100);

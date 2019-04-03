@@ -18,12 +18,13 @@ static void send_carrier(void);
 void __attribute__((__interrupt__)) _U1RXInterrupt(void)
 {
     ClrWdt();
+    
     HL2 = 1;
-
     receive_data_RS485();
-    send_data();
-
     HL2 = 0;
+    HL1 = 1;
+    send_data();
+    HL1 = 0;
 
     RX_FX604;
 
@@ -68,9 +69,12 @@ void __attribute__((__interrupt__)) _U2RXInterrupt(void)
     }
     else
     {
+        HL2 = 0;
+        HL1 = 1;
         send_data();
     }
 
+    HL1 = 0;
     HL2 = 0;
 
     RX_FX604;

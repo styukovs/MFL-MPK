@@ -1,7 +1,7 @@
 #ifndef COMMON_DRIVER_H
 #define COMMON_DRIVER_H
 
-#define SYSCLK              14318180                         //частота Fosc
+#define SYSCLK              14318180                         //С‡Р°СЃС‚РѕС‚Р° Fosc
 #define FCY                 SYSCLK/2
 
 
@@ -19,28 +19,28 @@
 
 
 //******************************************************************************                                          
-//*                          НОЖКИ МИКРОКОНТРОЛЛЕРА                            *
+//*                          РќРћР–РљР РњРРљР РћРљРћРќРўР РћР›Р›Р•Р Рђ                            *
 //******************************************************************************
 #define HL1                 LATBbits.LATB6
 #define HL2                 LATBbits.LATB7
 #define M0                  LATAbits.LATA0
 #define M1                  LATAbits.LATA1
 #define DET                 PORTAbits.RA4
-#define RX_FX604            M1 = 1; M0 = 0; __delay_ms(4);                   //настройка модема на прием
-#define TX_FX604            M0 = 1; M1 = 0; __delay_us(200);                //настройка модема на передачу
+#define RX_FX604            M1 = 1; M0 = 0; __delay_ms(4);                   //РЅР°СЃС‚СЂРѕР№РєР° РјРѕРґРµРјР° РЅР° РїСЂРёРµРј
+#define TX_FX604            M0 = 1; M1 = 0; __delay_us(200);                //РЅР°СЃС‚СЂРѕР№РєР° РјРѕРґРµРјР° РЅР° РїРµСЂРµРґР°С‡Сѓ
 #define MISO                PORTBbits.RB8
 #define MOSI                LATBbits.LATB9
 #define RDYN                PORTBbits.RB12
 #define SCLK                LATBbits.LATB10
 #define TX_RS485            LATBbits.LATB15
-//пины, связанные с адресом модема
+//РїРёРЅС‹, СЃРІСЏР·Р°РЅРЅС‹Рµ СЃ Р°РґСЂРµСЃРѕРј РјРѕРґРµРјР°
 #define ADRES               PORTBbits.RB5
 #define LOAD                LATBbits.LATB4
 #define SS                  LATBbits.LATB11
 
 
-//                                          КОНСТАНТЫ
-// временные промежутки для FX604
+//                                          РљРћРќРЎРўРђРќРўР«
+// РІСЂРµРјРµРЅРЅС‹Рµ РїСЂРѕРјРµР¶СѓС‚РєРё РґР»СЏ FX604
 #define Ts_us               1
 #define Th_us               1
 #define Td_us               1
@@ -53,8 +53,8 @@
 #define DATA_SIZE_H         1
 #define DATA_SIZE_L         2
 
-// константы для таймера
-#define TIMEOUT_FOR_19200     (16*FCY)/19200            // если время превышает время принятия 16 бит - то считаем, что пакет полностью принят
+// РєРѕРЅСЃС‚Р°РЅС‚С‹ РґР»СЏ С‚Р°Р№РјРµСЂР°
+#define TIMEOUT_FOR_19200     (16*FCY)/19200            // РµСЃР»Рё РІСЂРµРјСЏ РїСЂРµРІС‹С€Р°РµС‚ РІСЂРµРјСЏ РїСЂРёРЅСЏС‚РёСЏ 16 Р±РёС‚ - С‚Рѕ СЃС‡РёС‚Р°РµРј, С‡С‚Рѕ РїР°РєРµС‚ РїРѕР»РЅРѕСЃС‚СЊСЋ РїСЂРёРЅСЏС‚
 #define TIMEOUT_FOR_38400     (16*FCY)/38400
 #define TIMEOUT_FOR_57600     (16*FCY)/57600
 #define TIMEOUT_FOR_115200    (16*FCY)/115200

@@ -26,7 +26,7 @@
 #pragma config IOL1WAY = ON             // Peripheral Pin Select Configuration (Allow Only One Re-configuration)
 #pragma config FCKSM = CSDCMD           // Clock Switching and Monitor (Both Clock Switching and Fail-Safe Clock Monitor are disabled)
 
-// FWDT     установлен на 4 секунды
+// FWDT     СѓСЃС‚Р°РЅРѕРІР»РµРЅ РЅР° 4 СЃРµРєСѓРЅРґС‹
 #pragma config WDTPOST = PS4096        // Watchdog Timer Postscaler (1:4,096)
 #pragma config WDTPRE = PR32           // WDT Prescaler (1:32)
 #pragma config WINDIS = OFF             // Watchdog Timer Window (Watchdog Timer in Non-Window mode)
